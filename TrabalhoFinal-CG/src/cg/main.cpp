@@ -15,36 +15,29 @@
 #include "image.h"
 #include <math.h>
 
-
 #define PI 3.1415
-
 
 #define COORD_TEXTURA_AVIAO 1.0
 #define COR_DO_PLANO 0.52,0.52,0.78,1.0
 #define COR_DO_AVIAO 0.3,0.52,0.18,1.0
 #define TEXTURA_DO_AVIAO "camuflagem.rgb"
 
-GLint WIDTH =800;
-GLint HEIGHT=600;
+GLint WIDTH = 800;
+GLint HEIGHT = 600;
 
-GLfloat obs[3]={0.0, -17.0,0.0};
-GLfloat look[3]={0.0,3.0,0.0};
-GLuint  textura_plano;
-GLuint  textura_aviao;
+GLfloat obs[3] = { 0.0, -17.0, 0.0 };
+GLfloat look[3] = { 0.0, 3.0, 0.0 };
+GLuint textura_plano;
+GLuint textura_aviao;
 
-GLshort texturas=1;
-GLfloat tetaxz=90;
-GLfloat raioxz=3;
-GLuint  jato;
+GLshort texturas = 1;
+GLfloat tetaxz = 90;
+GLfloat raioxz = 3;
+GLuint jato;
 
-
-GLfloat cta[4][2]={
-  {-COORD_TEXTURA_AVIAO,-COORD_TEXTURA_AVIAO},
-  {+COORD_TEXTURA_AVIAO,-COORD_TEXTURA_AVIAO},
-  {+COORD_TEXTURA_AVIAO,+COORD_TEXTURA_AVIAO},
-  {-COORD_TEXTURA_AVIAO,+COORD_TEXTURA_AVIAO}
-};
-
+GLfloat cta[4][2] = { { -COORD_TEXTURA_AVIAO, -COORD_TEXTURA_AVIAO }, {
+		+COORD_TEXTURA_AVIAO, -COORD_TEXTURA_AVIAO }, { +COORD_TEXTURA_AVIAO,
+		+COORD_TEXTURA_AVIAO }, { -COORD_TEXTURA_AVIAO, +COORD_TEXTURA_AVIAO } };
 
 // Qtd máxima de texturas a serem usadas no programa
 #define MAX_NO_TEXTURES 8
@@ -70,71 +63,72 @@ int posicao_metoeoro3 = 300;
 int posicao_metoeoro4 = 400;
 int posicao_metoeoro5 = 500;
 
+float t1 = 0;
+float t2 = 0.2;
+float t3 = 0.3;
+float t4 = 0.4;
+float t5 = 0.5;
 
+void compoe_jato(void) {
+	GLUquadricObj *quadric;
 
-void compoe_jato(void){
-  GLUquadricObj *quadric;
+	GLfloat asa[][3] = { { -4.0, 0.0, 0.0 }, { +4.0, 0.0, 0.0 },
+			{ 0.0, 0.0, 3.0 } };
 
-  GLfloat asa[][3]={
-    {-4.0,0.0,0.0},
-    {+4.0,0.0,0.0},
-    {0.0,0.0,3.0}
-  };
+	GLfloat cauda[][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 2.0, -1.0 }, { 0.0, 2.0,
+			0.0 }, { 0.0, 0.0, 2.0 } };
+	/* inicia a composicao do jato */
+	jato = glGenLists(1);
+	glNewList(jato, GL_COMPILE);
 
-  GLfloat cauda[][3]={
-    {0.0,0.0,0.0},
-    {0.0,2.0,-1.0},
-    {0.0,2.0,0.0},
-    {0.0,0.0,2.0}
-  };
-  /* inicia a composicao do jato */
-  jato = glGenLists(1);
-  glNewList(jato, GL_COMPILE);
+	/* asas */
+	glBegin(GL_TRIANGLES);
+	glTexCoord2fv(cta[0]);
+	glVertex3fv(asa[0]);
+	glTexCoord2fv(cta[1]);
+	glVertex3fv(asa[1]);
+	glTexCoord2fv(cta[3]);
+	glVertex3fv(asa[2]);
+	glEnd();
 
-  /* asas */
-  glBegin(GL_TRIANGLES);
-  glTexCoord2fv(cta[0]); glVertex3fv(asa[0]);
-  glTexCoord2fv(cta[1]); glVertex3fv(asa[1]);
-  glTexCoord2fv(cta[3]); glVertex3fv(asa[2]);
-  glEnd();
+	/* corpo */
+	quadric = gluNewQuadric();
+	gluQuadricTexture(quadric, GL_TRUE);
+	gluCylinder(quadric, 0.5, 0.5, 4, 12, 3);
 
-  /* corpo */
-  quadric = gluNewQuadric();
-  gluQuadricTexture(quadric, GL_TRUE);
-  gluCylinder(quadric, 0.5, 0.5, 4, 12, 3);
+	/* nariz */
+	quadric = gluNewQuadric();
+	gluQuadricTexture(quadric, GL_TRUE);
+	glPushMatrix();
+	glTranslatef(0, 0, 4);
+	gluCylinder(quadric, 0.5, 0.0, 1.5, 12, 3);
+	glPopMatrix();
 
-  /* nariz */
-  quadric = gluNewQuadric();
-  gluQuadricTexture(quadric, GL_TRUE);
-  glPushMatrix();
-  glTranslatef(0,0,4);
-  gluCylinder(quadric, 0.5, 0.0, 1.5, 12, 3);
-  glPopMatrix();
+	/* cauda */
+	glBegin(GL_POLYGON);
+	glTexCoord2fv(cta[0]);
+	glVertex3fv(cauda[0]);
+	glTexCoord2fv(cta[1]);
+	glVertex3fv(cauda[1]);
+	glTexCoord2fv(cta[2]);
+	glVertex3fv(cauda[2]);
+	glTexCoord2fv(cta[3]);
+	glVertex3fv(cauda[3]);
+	glEnd();
 
-  /* cauda */
-  glBegin(GL_POLYGON);
-  glTexCoord2fv(cta[0]); glVertex3fv(cauda[0]);
-  glTexCoord2fv(cta[1]); glVertex3fv(cauda[1]);
-  glTexCoord2fv(cta[2]); glVertex3fv(cauda[2]);
-  glTexCoord2fv(cta[3]); glVertex3fv(cauda[3]);
-  glEnd();
+	/* cabine do piloto */
+	glTranslatef(0, 0.3, 3.5);
+	glPushMatrix();
+	glScalef(0.7, 0.7, 2.0);
+	quadric = gluNewQuadric();
+	glColor3f(0.3, 0.5, 1);
+	//glDisable(GL_TEXTURE_2D);
+	gluSphere(quadric, 0.5, 12, 12);
+	glPopMatrix();
 
-  /* cabine do piloto */
-  glTranslatef(0,0.3,3.5);
-  glPushMatrix();
-  glScalef(0.7,0.7,2.0);
-  quadric=gluNewQuadric();
-  glColor3f(0.3,0.5,1);
-  //glDisable(GL_TEXTURE_2D);
-  gluSphere(quadric,0.5,12,12);
-  glPopMatrix();
-
-  /* termina a composicao do jato*/
-  glEndList();
+	/* termina a composicao do jato*/
+	glEndList();
 }
-
-
-
 
 // **********************************************************************
 //  void initTexture(void)
@@ -210,41 +204,34 @@ void initTexture(void) {
 
 }
 
+void carregar_texturas(void) {
+	IMAGE *img;
+	GLenum gluerr;
 
+	/* textura do aviao */
+	glGenTextures(1, &textura_aviao);
+	glBindTexture(GL_TEXTURE_2D, textura_aviao);
 
-void carregar_texturas(void){
-  IMAGE *img;
-  GLenum gluerr;
+	if (!(img = ImageLoad(TEXTURA_DO_AVIAO))) {
+		fprintf(stderr, "Error reading a texture.\n");
+		exit(-1);
+	}
 
+	gluerr = gluBuild2DMipmaps(GL_TEXTURE_2D, 3, img->sizeX, img->sizeY,
+	GL_RGB, GL_UNSIGNED_BYTE, (GLvoid *) (img->data));
+	if (gluerr) {
+		fprintf(stderr, "GLULib%s\n", gluErrorString(gluerr));
+		exit(-1);
+	}
 
-  /* textura do aviao */
-  glGenTextures(1, &textura_aviao);
-  glBindTexture(GL_TEXTURE_2D, textura_aviao);
-
-
-  if(!(img = ImageLoad(TEXTURA_DO_AVIAO))) {
-    fprintf(stderr,"Error reading a texture.\n");
-    exit(-1);
-  }
-
-  gluerr=gluBuild2DMipmaps(GL_TEXTURE_2D, 3,
-			   img->sizeX, img->sizeY,
-			   GL_RGB, GL_UNSIGNED_BYTE,
-			   (GLvoid *)(img->data));
-  if(gluerr){
-    fprintf(stderr,"GLULib%s\n",gluErrorString(gluerr));
-    exit(-1);
-  }
-
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-  glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+			GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 
 }
-
-
 
 // **********************************************************************
 //  void init(void)
@@ -253,7 +240,7 @@ void carregar_texturas(void){
 // **********************************************************************
 void init(void) {
 
-	 carregar_texturas();
+	carregar_texturas();
 	compoe_jato();
 	glShadeModel(GL_SMOOTH);							// Enable Smooth Shading
 	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
@@ -313,8 +300,6 @@ void displayFundo(void) {
 
 	glEnd();
 	glPopMatrix();
-
-
 
 }
 
@@ -406,7 +391,15 @@ void display(void) {
 	posicao_metoeoro4 = (posicao_metoeoro4++) % 95;
 	posicao_metoeoro5 = (posicao_metoeoro5++) % 95;
 
-	glTranslatef(0.0, 1.0, -((100 - posicao_metoeoro1)));
+	t1 += 0.02;
+	t2 += 0.02;
+	t3 += 0.02;
+	t4 += 0.02;
+	t5 += 0.02;
+
+
+
+	glTranslatef(0.0, 50 + t1 * (-51.5), -100 + 95 * t1);
 	glRotatef(xrot, 1.0, 0.0, 0.0);
 	glRotatef(yrot, 0.0, 1.0, 0.0);
 	glRotatef(zrot, 0.0, 0.0, 1.0);
@@ -416,7 +409,7 @@ void display(void) {
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(+3.0, 2.0, -((100 - posicao_metoeoro2)));
+	glTranslatef(+3.0, 50 + t2 * (-51.5), -100 + 95 * t2);
 	glRotatef(xrot, 1.0, 0.0, 0.0);
 	glRotatef(yrot, 0.0, 1.0, 0.0);
 	glRotatef(zrot, 0.0, 0.0, 1.0);
@@ -426,7 +419,7 @@ void display(void) {
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(+5.0, 3.0, -((100 - posicao_metoeoro3)));
+	glTranslatef(+5.0, 50 + t3 * (-51.5), -100 + 95 * t3);
 	glRotatef(xrot, 1.0, 0.0, 0.0);
 	glRotatef(yrot, 0.0, 1.0, 0.0);
 	glRotatef(zrot, 0.0, 0.0, 1.0);
@@ -436,7 +429,7 @@ void display(void) {
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(-5.0, -3.0, -((100 - posicao_metoeoro4)));
+	glTranslatef(-5.0, 50 + t4 * (-51.5), -100 + 95 * t4);
 	glRotatef(xrot, 1.0, 0.0, 0.0);
 	glRotatef(yrot, 0.0, 1.0, 0.0);
 	glRotatef(zrot, 0.0, 0.0, 1.0);
@@ -446,7 +439,7 @@ void display(void) {
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(-3.0, -4.0, -((100 - posicao_metoeoro5)));
+	glTranslatef(-3.0, 50 + t5 * (-51.5), -100 + 95 * t5);
 	glRotatef(xrot, 1.0, 0.0, 0.0);
 	glRotatef(yrot, 0.0, 1.0, 0.0);
 	glRotatef(zrot, 0.0, 0.0, 1.0);
@@ -456,26 +449,41 @@ void display(void) {
 	glPopMatrix();
 
 	//======================== jato
-			glTranslatef ( 0.0, -10.0, 2.0 );
-			 glPushMatrix();
+	glTranslatef(0.0, -10.0, 2.0);
+	// glPushMatrix();
 
-			  /* calcula a posicao do observador */
-			  obs[0]=raioxz*cos(2*PI*tetaxz/360);
-			  obs[2]=raioxz*sin(2*PI*tetaxz/360);
-			  gluLookAt(obs[0],obs[1],obs[2],look[0],look[1],look[2],0.0,1.0,0.0);
+	/* calcula a posicao do observador */
+	obs[0] = raioxz * cos(2 * PI * tetaxz / 360);
+	obs[2] = raioxz * sin(2 * PI * tetaxz / 360);
+	gluLookAt(obs[0], obs[1], obs[2], look[0], look[1], look[2], 0.0, 1.0, 0.0);
 
-			  /* habilita/desabilita uso de texturas*/
-			/*  if(texturas){
-			    glEnable(GL_TEXTURE_2D);
-			  }
-			  else{
-			    glDisable(GL_TEXTURE_2D);
-			  }*/
+	/* habilita/desabilita uso de texturas*/
+	/*  if(texturas){
+	 glEnable(GL_TEXTURE_2D);
+	 }
+	 else{
+	 glDisable(GL_TEXTURE_2D);
+	 }*/
 
+	glColor4f(COR_DO_AVIAO);
+	glBindTexture(GL_TEXTURE_2D, textura_aviao);
+	glCallList(jato);
 
-			  glColor4f(COR_DO_AVIAO);
-			  glBindTexture(GL_TEXTURE_2D,textura_aviao);
-			  glCallList(jato);
+	if (t1 >= 1.0) {
+		t1 = 0.0;
+	}
+	if (t2 >= 1.0) {
+		t2 = 0.0;
+	}
+	if (t3 >= 1.0) {
+		t3 = 0.0;
+	}
+	if (t4 >= 1.0) {
+		t4 = 0.0;
+	}
+	if (t5 >= 1.0) {
+		t5 = 0.0;
+	}
 
 	xrot += 0.2f;
 	yrot += 0.1f;
@@ -483,30 +491,29 @@ void display(void) {
 	glutSwapBuffers();
 }
 
-void special(int key, int x, int y){
-  switch (key) {
- /* case GLUT_KEY_UP:
-    obs[1]=obs[1]+1;
-    glutPostRedisplay();
-    break;
-  case GLUT_KEY_DOWN:
-    obs[1] =obs[1]-1;
-    glutPostRedisplay();
-    break;*/
-  case GLUT_KEY_LEFT:
-	  tetaxz=tetaxz-2;
-    glutPostRedisplay();
-    break;
-  case GLUT_KEY_RIGHT:
-	  tetaxz=tetaxz+2;
+void special(int key, int x, int y) {
+	switch (key) {
+	/* case GLUT_KEY_UP:
+	 obs[1]=obs[1]+1;
+	 glutPostRedisplay();
+	 break;
+	 case GLUT_KEY_DOWN:
+	 obs[1] =obs[1]-1;
+	 glutPostRedisplay();
+	 break;*/
+	case GLUT_KEY_LEFT:
+		tetaxz = tetaxz - 2;
+		glutPostRedisplay();
+		break;
+	case GLUT_KEY_RIGHT:
+		tetaxz = tetaxz + 2;
 
-    glutPostRedisplay();
-    break;
+		glutPostRedisplay();
+		break;
 
-    printf("%f",tetaxz);
-  }
+		printf("%f", tetaxz);
+	}
 }
-
 
 // **********************************************************************
 //  void keyboard ( unsigned char key, int x, int y )
