@@ -185,7 +185,7 @@ void initTexture(void) {
 	texture_id[Fim_Jogo] = 1007;
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[TIRO]);
-	tgaLoad("TCG1.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+	tgaLoad("tiro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	// ****
 	// Define a textura do objeto da ESQUERDA
@@ -201,7 +201,7 @@ void initTexture(void) {
 	// texture_id[OBJETO_ESQUERDA]  ==> define o número da textura 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO1]);
 	// Carrega a primeira imagem .TGA 
-	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[Fogo]);
 	tgaLoad("fogo.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
@@ -216,27 +216,27 @@ void initTexture(void) {
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO2]);
 
 	// carrega a segunda imagem TGA
-	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO3]);
 
 	// carrega a segunda imagem TGA
-	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO3]);
 
 	// carrega a segunda imagem TGA
-	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO4]);
 
 	// carrega a segunda imagem TGA
-	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO1]);
 
 	// carrega a segunda imagem TGA 
-	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 }
 
@@ -430,6 +430,7 @@ void desenhaTiros() {
 
 			glTranslatef(t.posicaoAtual.x, t.posicaoAtual.y, t.posicaoAtual.z);
 
+			glScalef(0.5, 0.5, 0.5);
 			DesenhaCubo(texture_id[TIRO]);
 			glPopMatrix();
 
@@ -592,7 +593,7 @@ void desenhaMeteoros() {
 
 			DesenhaCubo(texture_id[METEORO1]);
 
-			cout<<t.posicaoAtual.z<<endl;
+		//	cout<<t.posicaoAtual.z<<endl;
 			if(t.posicaoAtual.z > -8.0){
 				texturaFundo = Fim_Jogo;
 			}
