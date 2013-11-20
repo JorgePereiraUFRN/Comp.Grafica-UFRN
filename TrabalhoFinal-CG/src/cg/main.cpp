@@ -14,6 +14,23 @@
 #include "tgaload.h"
 #include "image.h"
 #include <math.h>
+#include <iostream>
+
+using namespace std;
+
+typedef struct {
+	float x;
+	float y;
+	float z;
+} ponto;
+
+typedef struct {
+	ponto pontoInicio;
+	ponto pontoFim;
+	bool visivel; //depois da colizao o tiro não deve ser visivel
+	float t;
+
+} tiro; //define um ponto.
 
 #define PI 3.1415
 
@@ -27,11 +44,12 @@ GLint HEIGHT = 600;
 
 GLfloat obs[3] = { 0.0, -17.0, 0.0 };
 GLfloat look[3] = { 0.0, 3.0, 0.0 };
+
 GLuint textura_plano;
 GLuint textura_aviao;
 
 GLshort texturas = 1;
-GLfloat tetaxz = 90;
+GLfloat tetaxz = 80;
 GLfloat raioxz = 3;
 GLuint jato;
 
@@ -40,7 +58,7 @@ GLfloat cta[4][2] = { { -COORD_TEXTURA_AVIAO, -COORD_TEXTURA_AVIAO }, {
 		+COORD_TEXTURA_AVIAO }, { -COORD_TEXTURA_AVIAO, +COORD_TEXTURA_AVIAO } };
 
 // Qtd máxima de texturas a serem usadas no programa
-#define MAX_NO_TEXTURES 8
+#define MAX_NO_TEXTURES 9
 
 #define METEORO1 1
 #define METEORO2  2
@@ -48,6 +66,7 @@ GLfloat cta[4][2] = { { -COORD_TEXTURA_AVIAO, -COORD_TEXTURA_AVIAO }, {
 #define METEORO3 3
 #define METEORO4 4
 #define METEORO5 5
+#define TIRO 6
 
 // vetor com os números das texturas
 GLuint texture_id[MAX_NO_TEXTURES];
@@ -57,17 +76,44 @@ float yrot;
 float zrot;
 float ratio;
 
-int posicao_metoeoro1 = 0;
-int posicao_metoeoro2 = 100;
-int posicao_metoeoro3 = 300;
-int posicao_metoeoro4 = 400;
-int posicao_metoeoro5 = 500;
-
 float t1 = 0;
-float t2 = 0.2;
+float t2 = 0.0;
 float t3 = 0.3;
 float t4 = 0.4;
 float t5 = 0.5;
+
+int NUM_TIROS = 20;
+tiro tiros[20];
+int contTiros = 0;
+int inicioTiros = 0;
+
+float tt[20];
+
+void novoTiro(float xf) {
+
+	tiro t;
+	t.pontoFim.x = xf;
+	t.pontoFim.y = 50;
+	t.pontoFim.z = -100;
+
+	t.pontoInicio.x = 0;
+	t.pontoInicio.y = -4;
+	t.pontoInicio.z = -5;
+
+	t.visivel = true;
+	t.t = 0;
+
+	if (contTiros < NUM_TIROS) {
+		if (!tiros[contTiros].visivel) {
+
+			tiros[contTiros] = t;
+			tt[contTiros] = 0;
+			contTiros = contTiros++ % NUM_TIROS;
+		}
+
+	}
+
+}
 
 void compoe_jato(void) {
 	GLUquadricObj *quadric;
@@ -156,6 +202,10 @@ void initTexture(void) {
 	texture_id[METEORO3] = 1003;
 	texture_id[METEORO4] = 1004;
 	texture_id[METEORO5] = 1005;
+	texture_id[TIRO] = 1006;
+
+	glBindTexture( GL_TEXTURE_2D, texture_id[TIRO]);
+	tgaLoad("TCG1.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	// ****
 	// Define a textura do objeto da ESQUERDA
@@ -168,7 +218,7 @@ void initTexture(void) {
 	// texture_id[OBJETO_ESQUERDA]  ==> define o número da textura 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO1]);
 	// Carrega a primeira imagem .TGA 
-	tgaLoad("TCG1.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	// ****
 	// Define a textura do objeto da DIREITA
@@ -227,7 +277,7 @@ void carregar_texturas(void) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-			GL_LINEAR_MIPMAP_LINEAR);
+	GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 
@@ -373,6 +423,54 @@ void DesenhaCubo(GLuint nro_da_textura) {
 
 }
 
+void desenhaTiros() {
+	int i;
+	int posicaoTiro = 0;
+	int tirosFinalizados = 0;
+	tiro t;
+	for (i = 0; i < contTiros; i++) {
+
+		posicaoTiro = (inicioTiros + i) % NUM_TIROS;
+
+		t = tiros[posicaoTiro];
+
+		if (t.visivel == true) {
+//-(5 + tt[posicaoTiro] * 95)
+
+			//glTranslatef( 0 + tt[posicaoTiro] * (0-0), -4 + tt[posicaoTiro] * (50 - 0), -5 + tt[posicaoTiro] * (-100 -5));
+
+			glTranslatef(
+			 t.pontoInicio.x + tt[posicaoTiro] * (t.pontoFim.x - t.pontoInicio.x),
+			 t.pontoInicio.y + tt[posicaoTiro] * (t.pontoFim.y - t.pontoInicio.y),
+			 t.pontoInicio.z + tt[posicaoTiro] * (t.pontoFim.z - t.pontoInicio.z));
+
+
+			tt[posicaoTiro] += 0.1;
+
+
+			if (tt[posicaoTiro]>= 1) {
+				tt[posicaoTiro] = 0;
+				t.visivel = false;
+				tirosFinalizados++;
+			}
+
+			glPushMatrix();
+			glRotatef(xrot, 1.0, 0.0, 0.0);
+			glRotatef(yrot, 0.0, 1.0, 0.0);
+			glRotatef(zrot, 0.0, 0.0, 1.0);
+
+
+			DesenhaCubo(texture_id[TIRO]);
+			glPopMatrix();
+
+
+		}
+	}
+
+	inicioTiros = (inicioTiros + tirosFinalizados) % NUM_TIROS;
+
+}
+
 // **********************************************************************
 //  void display( void )
 //
@@ -385,11 +483,6 @@ void display(void) {
 	displayFundo();
 
 	glPushMatrix();
-	posicao_metoeoro1 = (posicao_metoeoro1++) % 95;
-	posicao_metoeoro2 = (posicao_metoeoro2++) % 95;
-	posicao_metoeoro3 = (posicao_metoeoro3++) % 95;
-	posicao_metoeoro4 = (posicao_metoeoro4++) % 95;
-	posicao_metoeoro5 = (posicao_metoeoro5++) % 95;
 
 	t1 += 0.02;
 	t2 += 0.02;
@@ -398,8 +491,11 @@ void display(void) {
 	t5 += 0.02;
 
 
+	desenhaTiros();
 
-	glTranslatef(0.0, 50 + t1 * (-51.5), -100 + 95 * t1);
+
+//glTranslatef(0.0, 50 + t1 * (-51.5), -100 + 95 * t1); //
+	glTranslatef(t1 * 90, -4 + t1 * 50, -(5 + t1 * 95));
 	glRotatef(xrot, 1.0, 0.0, 0.0);
 	glRotatef(yrot, 0.0, 1.0, 0.0);
 	glRotatef(zrot, 0.0, 0.0, 1.0);
@@ -409,7 +505,7 @@ void display(void) {
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(+3.0, 50 + t2 * (-51.5), -100 + 95 * t2);
+	glTranslatef(90 + t2 * (-(90 - 2)), 50 + t2 * (-51.5), -100 + 95 * t2);
 	glRotatef(xrot, 1.0, 0.0, 0.0);
 	glRotatef(yrot, 0.0, 1.0, 0.0);
 	glRotatef(zrot, 0.0, 0.0, 1.0);
@@ -419,7 +515,7 @@ void display(void) {
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(+5.0, 50 + t3 * (-51.5), -100 + 95 * t3);
+	glTranslatef((1 - t3) * 90, 50 + t3 * (-51.5), -100 + 95 * t3);
 	glRotatef(xrot, 1.0, 0.0, 0.0);
 	glRotatef(yrot, 0.0, 1.0, 0.0);
 	glRotatef(zrot, 0.0, 0.0, 1.0);
@@ -448,9 +544,9 @@ void display(void) {
 
 	glPopMatrix();
 
-	//======================== jato
-	glTranslatef(0.0, -10.0, 2.0);
-	// glPushMatrix();
+//======================== jato
+	glTranslatef(0.0, -12.0, 0.0);
+// glPushMatrix();
 
 	/* calcula a posicao do observador */
 	obs[0] = raioxz * cos(2 * PI * tetaxz / 360);
@@ -491,6 +587,20 @@ void display(void) {
 	glutSwapBuffers();
 }
 
+
+void Atirar(unsigned char tecla, int x, int y)
+{
+    switch (tecla)
+    {
+
+        case ' ':
+        {
+        	novoTiro( -(tetaxz * cos(2 * PI * tetaxz / 360) ));
+            break;
+        }
+    }
+}
+
 void special(int key, int x, int y) {
 	switch (key) {
 	/* case GLUT_KEY_UP:
@@ -511,7 +621,7 @@ void special(int key, int x, int y) {
 		glutPostRedisplay();
 		break;
 
-		printf("%f", tetaxz);
+
 	}
 }
 
@@ -541,7 +651,7 @@ void arrow_keys(int a_keys, int x, int y) {
 		glutFullScreen(); // Go Into Full Screen Mode
 		break;
 	case GLUT_KEY_DOWN:               // When Down Arrow Is Pressed...
-		glutInitWindowSize(700, 500);
+		glutInitWindowSize(800, 600);
 		break;
 	default:
 		break;
@@ -557,18 +667,21 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode( GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(0, 0);
-	glutInitWindowSize(700, 500);
+	glutInitWindowSize(800, 600);
 	glutCreateWindow("Tópicos em Computação Gráfica - Teste com Texturas.");
 
 	init();
 	initTexture();
 
-	//glutDisplayFunc ( displayFundo );
+
+
+//glutDisplayFunc ( displayFundo );
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutSpecialFunc(special);
 	glutKeyboardFunc(keyboard);
-	//glutSpecialFunc(arrow_keys);
+	 glutKeyboardFunc(Atirar);
+//glutSpecialFunc(arrow_keys);
 	glutIdleFunc(display);
 	glutMainLoop();
 
