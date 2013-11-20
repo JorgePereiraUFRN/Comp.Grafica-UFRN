@@ -16,7 +16,7 @@ int fila_vazia(Fila* fila) {
   return (fila->c == 0);
 }
 
-void insere_fila(Fila* fila, tiro elem) {
+void insere_fila(Fila* fila, tiroMeteoro elem) {
   if (fila->c == MAX_ELEM) {
     printf("Erro: fila cheia!\n");
    // exit(0);
@@ -26,7 +26,7 @@ void insere_fila(Fila* fila, tiro elem) {
   fila->vet[fila->f] = elem;
 }
 
-tiro remove_fila(Fila* fila) {
+tiroMeteoro remove_fila(Fila* fila) {
   if (fila_vazia(fila)) {
     printf("Erro: fila vazia!\n");
     //exit(0);

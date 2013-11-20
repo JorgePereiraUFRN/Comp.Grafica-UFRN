@@ -19,8 +19,6 @@
 
 using namespace std;
 
-
-
 #define PI 3.1415
 
 #define COORD_TEXTURA_AVIAO 1.0
@@ -38,7 +36,7 @@ GLuint textura_plano;
 GLuint textura_aviao;
 
 GLshort texturas = 1;
-GLfloat tetaxz = 80;
+GLfloat tetaxz = 90;
 GLfloat raioxz = 3;
 GLuint jato;
 
@@ -47,15 +45,16 @@ GLfloat cta[4][2] = { { -COORD_TEXTURA_AVIAO, -COORD_TEXTURA_AVIAO }, {
 		+COORD_TEXTURA_AVIAO }, { -COORD_TEXTURA_AVIAO, +COORD_TEXTURA_AVIAO } };
 
 // Qtd máxima de texturas a serem usadas no programa
-#define MAX_NO_TEXTURES 9
+#define MAX_NO_TEXTURES 10
 
 #define METEORO1 1
 #define METEORO2  2
 #define FUNDO 0
 #define METEORO3 3
 #define METEORO4 4
-#define METEORO5 5
+#define Fogo 5
 #define TIRO 6
+#define Fim_Jogo 7
 
 // vetor com os números das texturas
 GLuint texture_id[MAX_NO_TEXTURES];
@@ -71,27 +70,27 @@ float t3 = 0.3;
 float t4 = 0.4;
 float t5 = 0.5;
 
-Fila_t *fila = new Fila_t;
+int texturaFundo = FUNDO;
 
+Fila_t *fila_tiros = new Fila_t;
 
+Fila_t *fila_meteoros = new Fila_t;
 
 void novoTiro(float xf) {
 
+	tiroMeteoro t;
+	t.pontoFim.x = xf;
+	t.pontoFim.y = 50;
+	t.pontoFim.z = -100;
 
-		tiro t;
-		t.pontoFim.x = xf;
-		t.pontoFim.y = 50;
-		t.pontoFim.z = -100;
+	t.pontoInicio.x = 0;
+	t.pontoInicio.y = -4;
+	t.pontoInicio.z = -5;
 
-		t.pontoInicio.x = 0;
-		t.pontoInicio.y = -4;
-		t.pontoInicio.z = -5;
+	t.visivel = true;
+	t.t = 0.0;
 
-		t.visivel = true;
-		t.t = 0.0;
-
-		insere_fila(fila, t);
-
+	insere_fila(fila_tiros, t);
 
 }
 
@@ -181,8 +180,9 @@ void initTexture(void) {
 	texture_id[METEORO2] = 1002;
 	texture_id[METEORO3] = 1003;
 	texture_id[METEORO4] = 1004;
-	texture_id[METEORO5] = 1005;
+	texture_id[Fogo] = 1005;
 	texture_id[TIRO] = 1006;
+	texture_id[Fim_Jogo] = 1007;
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[TIRO]);
 	tgaLoad("TCG1.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
@@ -193,12 +193,18 @@ void initTexture(void) {
 	glBindTexture( GL_TEXTURE_2D, texture_id[FUNDO]);
 	tgaLoad("cosmos2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
+	glBindTexture( GL_TEXTURE_2D, texture_id[Fim_Jogo]);
+	tgaLoad("fimJogo.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+
 	// Define que tipo de textura será usada
 	// GL_TEXTURE_2D ==> define que será usada uma textura 2D (bitmaps)
 	// texture_id[OBJETO_ESQUERDA]  ==> define o número da textura 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO1]);
 	// Carrega a primeira imagem .TGA 
 	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
+
+	glBindTexture( GL_TEXTURE_2D, texture_id[Fogo]);
+	tgaLoad("fogo.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	// ****
 	// Define a textura do objeto da DIREITA
@@ -227,7 +233,7 @@ void initTexture(void) {
 	// carrega a segunda imagem TGA
 	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
-	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO5]);
+	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO1]);
 
 	// carrega a segunda imagem TGA 
 	tgaLoad("gremio2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
@@ -315,7 +321,7 @@ void displayFundo(void) {
 	 glRotatef ( zrot, 0.0, 0.0, 1.0 );*/
 
 	// define qual das texturas usar
-	glBindTexture( GL_TEXTURE_2D, texture_id[FUNDO]);
+	glBindTexture( GL_TEXTURE_2D, texture_id[texturaFundo]);
 
 	glBegin( GL_QUADS);
 	// Front Face
@@ -405,39 +411,209 @@ void DesenhaCubo(GLuint nro_da_textura) {
 
 void desenhaTiros() {
 
-	tiro temp[70];
+	tiroMeteoro temp[70];
 	int i = 0;
 
-	while(! fila_vazia(fila)){
+	while (!fila_vazia(fila_tiros)) {
 
-		tiro t = remove_fila(fila);
-
+		tiroMeteoro t = remove_fila(fila_tiros);
 
 		if (t.visivel == true) {
 
 			glPushMatrix();
-					glTranslatef(
-					 t.pontoInicio.x + t.t * (t.pontoFim.x - t.pontoInicio.x),
-					 t.pontoInicio.y + t.t * (t.pontoFim.y - t.pontoInicio.y),
-					 t.pontoInicio.z + t.t * (t.pontoFim.z - t.pontoInicio.z));
+			t.posicaoAtual.x = t.pontoInicio.x
+					+ t.t * (t.pontoFim.x - t.pontoInicio.x);
+			t.posicaoAtual.y = t.pontoInicio.y
+					+ t.t * (t.pontoFim.y - t.pontoInicio.y);
+			t.posicaoAtual.z = t.pontoInicio.z
+					+ t.t * (t.pontoFim.z - t.pontoInicio.z);
+
+			glTranslatef(t.posicaoAtual.x, t.posicaoAtual.y, t.posicaoAtual.z);
 
 			DesenhaCubo(texture_id[TIRO]);
 			glPopMatrix();
 
-					t.t += 0.05;
+			t.t += 0.05;
 
-					if(t.t <= 1){
-						temp[i++] = t;
-					}
+			if (t.t <= 1) {
+				temp[i++] = t;
+			}
 		}
 
 	}
 	int j;
 
-	for( j = 0 ; j < i; j++){
-		insere_fila(fila, temp[j]);
+	for (j = 0; j < i; j++) {
+		insere_fila(fila_tiros, temp[j]);
 	}
 
+}
+
+void novometeoro() {
+
+	tiroMeteoro m;
+
+	m.pontoInicio.x = (rand() % 200) - 100;
+	m.pontoInicio.y = 50;
+	m.pontoInicio.z = -100;
+
+	m.pontoFim.x = 0;
+	m.pontoFim.y = -4;
+	m.pontoFim.z = -5;
+
+	m.visivel = true;
+
+	int v = rand();
+
+	m.t = 1.0 / ((v % 5) + 4);
+
+	insere_fila(fila_meteoros, m);
+}
+
+float modulo(float v1, float v2) {
+	if ((v1 - v2) > 0) {
+		return v1 - v2;
+	} else {
+		return v2 - v1;
+	}
+}
+
+bool colisao(ponto p1, ponto p2) {
+
+	if (modulo(p1.x, p2.x) <= 5.0) {
+
+		if (modulo(p1.z, p2.z) <= 5.0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void verificarcolisoes() {
+
+	tiroMeteoro tiros[100];
+
+	int t = 0;
+	tiroMeteoro tiro;
+	tiroMeteoro meteoro;
+	while (!fila_vazia(fila_tiros)) {
+
+		tiro = remove_fila(fila_tiros);
+
+		tiros[t++] = tiro;
+
+		tiroMeteoro meteoros[5];
+		int m = 0;
+
+		while (!fila_vazia(fila_meteoros)) {
+
+			meteoro = remove_fila(fila_meteoros);
+
+			if (colisao(tiro.posicaoAtual, meteoro.posicaoAtual)) {
+
+				tiro.visivel = false;
+				meteoro.visivel = false;
+
+				glPushMatrix();
+
+				glTranslatef(tiro.posicaoAtual.x, tiro.posicaoAtual.y,
+						tiro.posicaoAtual.z);
+
+				DesenhaCubo(texture_id[Fogo]);
+				glPopMatrix();
+
+				t--;
+				novometeoro();
+				break;
+			}
+
+			meteoros[m++] = meteoro;
+		}
+
+		for (int j = 0; j < m; j++) {
+			insere_fila(fila_meteoros, meteoros[j]);
+		}
+
+	}
+
+	for (int j = 0; j < t; j++) {
+		insere_fila(fila_tiros, tiros[j]);
+	}
+}
+
+/*
+bool verificarColisaoJato() {
+
+	tiroMeteoro meteoros[5];
+	tiroMeteoro meteoro;
+	int m = 0;
+
+	while (!fila_vazia(fila_meteoros)) {
+
+		meteoro = remove_fila(fila_meteoros);
+
+		if (meteoro.posicaoAtual.z > (-8.0)) {
+			cout<<meteoro.posicaoAtual.z<<endl;
+			texturaFundo = Fim_Jogo;
+
+		}
+
+		meteoros[m++] = meteoro;
+	}
+
+	for (int j = 0; j < m; j++) {
+		insere_fila(fila_meteoros, meteoros[j]);
+	}
+}
+*/
+
+void desenhaMeteoros() {
+
+	tiroMeteoro temp[10];
+	int i = 0;
+
+	while (!fila_vazia(fila_meteoros)) {
+
+		tiroMeteoro t = remove_fila(fila_meteoros);
+
+		if (t.visivel == true) {
+
+			glPushMatrix();
+
+			t.posicaoAtual.x = t.pontoInicio.x
+					+ t.t * (t.pontoFim.x - t.pontoInicio.x);
+			t.posicaoAtual.y = t.pontoInicio.y
+					+ t.t * (t.pontoFim.y - t.pontoInicio.y);
+			t.posicaoAtual.z = (t.pontoInicio.z
+					+ t.t * (t.pontoFim.z - t.pontoInicio.z));
+
+			glTranslatef(t.posicaoAtual.x, t.posicaoAtual.y, t.posicaoAtual.z);
+
+			DesenhaCubo(texture_id[METEORO1]);
+
+			cout<<t.posicaoAtual.z<<endl;
+			if(t.posicaoAtual.z > -8.0){
+				texturaFundo = Fim_Jogo;
+			}
+
+			glPopMatrix();
+
+			t.t += 0.01;
+
+			if (t.t <= 1) {
+				temp[i++] = t;
+			} else {
+				novometeoro();
+			}
+		}
+
+	}
+	int j;
+
+	for (j = 0; j < i; j++) {
+		insere_fila(fila_meteoros, temp[j]);
+	}
 
 }
 
@@ -460,95 +636,36 @@ void display(void) {
 	t4 += 0.02;
 	t5 += 0.02;
 
+	if (texturaFundo != Fim_Jogo) {
+		desenhaTiros();
 
-	desenhaTiros();
+		desenhaMeteoros();
 
+		verificarcolisoes();
 
-//glTranslatef(0.0, 50 + t1 * (-51.5), -100 + 95 * t1); //
-	glTranslatef(t1 * 90, -4 + t1 * 50, -(5 + t1 * 95));
-	glRotatef(xrot, 1.0, 0.0, 0.0);
-	glRotatef(yrot, 0.0, 1.0, 0.0);
-	glRotatef(zrot, 0.0, 0.0, 1.0);
-
-	DesenhaCubo(texture_id[METEORO1]);
-
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(90 + t2 * (-(90 - 2)), 50 + t2 * (-51.5), -100 + 95 * t2);
-	glRotatef(xrot, 1.0, 0.0, 0.0);
-	glRotatef(yrot, 0.0, 1.0, 0.0);
-	glRotatef(zrot, 0.0, 0.0, 1.0);
-
-	DesenhaCubo(texture_id[METEORO2]);
-
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef((1 - t3) * 90, 50 + t3 * (-51.5), -100 + 95 * t3);
-	glRotatef(xrot, 1.0, 0.0, 0.0);
-	glRotatef(yrot, 0.0, 1.0, 0.0);
-	glRotatef(zrot, 0.0, 0.0, 1.0);
-
-	DesenhaCubo(texture_id[METEORO3]);
-
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(-5.0, 50 + t4 * (-51.5), -100 + 95 * t4);
-	glRotatef(xrot, 1.0, 0.0, 0.0);
-	glRotatef(yrot, 0.0, 1.0, 0.0);
-	glRotatef(zrot, 0.0, 0.0, 1.0);
-
-	DesenhaCubo(texture_id[METEORO4]);
-
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(-3.0, 50 + t5 * (-51.5), -100 + 95 * t5);
-	glRotatef(xrot, 1.0, 0.0, 0.0);
-	glRotatef(yrot, 0.0, 1.0, 0.0);
-	glRotatef(zrot, 0.0, 0.0, 1.0);
-
-	DesenhaCubo(texture_id[METEORO5]);
-
-	glPopMatrix();
+		//verificarColisaoJato();
 
 //======================== jato
-	glTranslatef(0.0, -12.0, 0.0);
+		glTranslatef(0.0, -12.0, 0.0);
 // glPushMatrix();
 
-	/* calcula a posicao do observador */
-	obs[0] = raioxz * cos(2 * PI * tetaxz / 360);
-	obs[2] = raioxz * sin(2 * PI * tetaxz / 360);
-	gluLookAt(obs[0], obs[1], obs[2], look[0], look[1], look[2], 0.0, 1.0, 0.0);
+		/* calcula a posicao do observador */
+		obs[0] = raioxz * cos(2 * PI * tetaxz / 360);
+		obs[2] = raioxz * sin(2 * PI * tetaxz / 360);
+		gluLookAt(obs[0], obs[1], obs[2], look[0], look[1], look[2], 0.0, 1.0,
+				0.0);
 
-	/* habilita/desabilita uso de texturas*/
-	/*  if(texturas){
-	 glEnable(GL_TEXTURE_2D);
-	 }
-	 else{
-	 glDisable(GL_TEXTURE_2D);
-	 }*/
+		/* habilita/desabilita uso de texturas*/
+		/*  if(texturas){
+		 glEnable(GL_TEXTURE_2D);
+		 }
+		 else{
+		 glDisable(GL_TEXTURE_2D);
+		 }*/
 
-	glColor4f(COR_DO_AVIAO);
-	glBindTexture(GL_TEXTURE_2D, textura_aviao);
-	glCallList(jato);
-
-	if (t1 >= 1.0) {
-		t1 = 0.0;
-	}
-	if (t2 >= 1.0) {
-		t2 = 0.0;
-	}
-	if (t3 >= 1.0) {
-		t3 = 0.0;
-	}
-	if (t4 >= 1.0) {
-		t4 = 0.0;
-	}
-	if (t5 >= 1.0) {
-		t5 = 0.0;
+		glColor4f(COR_DO_AVIAO);
+		glBindTexture(GL_TEXTURE_2D, textura_aviao);
+		glCallList(jato);
 	}
 
 	xrot += 0.2f;
@@ -557,18 +674,19 @@ void display(void) {
 	glutSwapBuffers();
 }
 
+void Atirar(unsigned char tecla, int x, int y) {
+	switch (tecla) {
 
-void Atirar(unsigned char tecla, int x, int y)
-{
-    switch (tecla)
-    {
+	case ' ': {
+		if (90.0 - tetaxz < 0) {
+			novoTiro(-(tetaxz * cos(2 * PI * tetaxz / 360)));
+		} else {
+			novoTiro(-((90 - tetaxz) * cos(2 * PI * tetaxz / 360)));
+		}
 
-        case ' ':
-        {
-        	novoTiro( -(tetaxz * cos(2 * PI * tetaxz / 360) ));
-            break;
-        }
-    }
+		break;
+	}
+	}
 }
 
 void special(int key, int x, int y) {
@@ -582,15 +700,14 @@ void special(int key, int x, int y) {
 	 glutPostRedisplay();
 	 break;*/
 	case GLUT_KEY_LEFT:
-		tetaxz = tetaxz - 2;
+		tetaxz = tetaxz - 5.0;
 		glutPostRedisplay();
 		break;
 	case GLUT_KEY_RIGHT:
-		tetaxz = tetaxz + 2;
+		tetaxz = tetaxz + 5.0;
 
 		glutPostRedisplay();
 		break;
-
 
 	}
 }
@@ -642,15 +759,22 @@ int main(int argc, char** argv) {
 
 	init();
 	initTexture();
-	cria_fila(fila);
 
+	cria_fila(fila_tiros);
+
+	cria_fila(fila_meteoros);
+
+	for (int i = 0; i < 5; i++) {
+
+		novometeoro();
+	}
 
 //glutDisplayFunc ( displayFundo );
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutSpecialFunc(special);
 	glutKeyboardFunc(keyboard);
-	 glutKeyboardFunc(Atirar);
+	glutKeyboardFunc(Atirar);
 //glutSpecialFunc(arrow_keys);
 	glutIdleFunc(display);
 	glutMainLoop();
