@@ -15,22 +15,11 @@
 #include "image.h"
 #include <math.h>
 #include <iostream>
+#include "Fila.h"
 
 using namespace std;
 
-typedef struct {
-	float x;
-	float y;
-	float z;
-} ponto;
 
-typedef struct {
-	ponto pontoInicio;
-	ponto pontoFim;
-	bool visivel; //depois da colizao o tiro não deve ser visivel
-	float t;
-
-} tiro; //define um ponto.
 
 #define PI 3.1415
 
@@ -82,36 +71,27 @@ float t3 = 0.3;
 float t4 = 0.4;
 float t5 = 0.5;
 
-int NUM_TIROS = 20;
-tiro tiros[20];
-int contTiros = 0;
-int inicioTiros = 0;
+Fila_t *fila = new Fila_t;
 
-float tt[20];
+
 
 void novoTiro(float xf) {
 
-	tiro t;
-	t.pontoFim.x = xf;
-	t.pontoFim.y = 50;
-	t.pontoFim.z = -100;
 
-	t.pontoInicio.x = 0;
-	t.pontoInicio.y = -4;
-	t.pontoInicio.z = -5;
+		tiro t;
+		t.pontoFim.x = xf;
+		t.pontoFim.y = 50;
+		t.pontoFim.z = -100;
 
-	t.visivel = true;
-	t.t = 0;
+		t.pontoInicio.x = 0;
+		t.pontoInicio.y = -4;
+		t.pontoInicio.z = -5;
 
-	if (contTiros < NUM_TIROS) {
-		if (!tiros[contTiros].visivel) {
+		t.visivel = true;
+		t.t = 0.0;
 
-			tiros[contTiros] = t;
-			tt[contTiros] = 0;
-			contTiros = contTiros++ % NUM_TIROS;
-		}
+		insere_fila(fila, t);
 
-	}
 
 }
 
@@ -424,50 +404,40 @@ void DesenhaCubo(GLuint nro_da_textura) {
 }
 
 void desenhaTiros() {
-	int i;
-	int posicaoTiro = 0;
-	int tirosFinalizados = 0;
-	tiro t;
-	for (i = 0; i < contTiros; i++) {
 
-		posicaoTiro = (inicioTiros + i) % NUM_TIROS;
+	tiro temp[70];
+	int i = 0;
 
-		t = tiros[posicaoTiro];
+	while(! fila_vazia(fila)){
+
+		tiro t = remove_fila(fila);
+
 
 		if (t.visivel == true) {
-//-(5 + tt[posicaoTiro] * 95)
-
-			//glTranslatef( 0 + tt[posicaoTiro] * (0-0), -4 + tt[posicaoTiro] * (50 - 0), -5 + tt[posicaoTiro] * (-100 -5));
-
-			glTranslatef(
-			 t.pontoInicio.x + tt[posicaoTiro] * (t.pontoFim.x - t.pontoInicio.x),
-			 t.pontoInicio.y + tt[posicaoTiro] * (t.pontoFim.y - t.pontoInicio.y),
-			 t.pontoInicio.z + tt[posicaoTiro] * (t.pontoFim.z - t.pontoInicio.z));
-
-
-			tt[posicaoTiro] += 0.1;
-
-
-			if (tt[posicaoTiro]>= 1) {
-				tt[posicaoTiro] = 0;
-				t.visivel = false;
-				tirosFinalizados++;
-			}
 
 			glPushMatrix();
-			glRotatef(xrot, 1.0, 0.0, 0.0);
-			glRotatef(yrot, 0.0, 1.0, 0.0);
-			glRotatef(zrot, 0.0, 0.0, 1.0);
-
+					glTranslatef(
+					 t.pontoInicio.x + t.t * (t.pontoFim.x - t.pontoInicio.x),
+					 t.pontoInicio.y + t.t * (t.pontoFim.y - t.pontoInicio.y),
+					 t.pontoInicio.z + t.t * (t.pontoFim.z - t.pontoInicio.z));
 
 			DesenhaCubo(texture_id[TIRO]);
 			glPopMatrix();
 
+					t.t += 0.05;
 
+					if(t.t <= 1){
+						temp[i++] = t;
+					}
 		}
+
+	}
+	int j;
+
+	for( j = 0 ; j < i; j++){
+		insere_fila(fila, temp[j]);
 	}
 
-	inicioTiros = (inicioTiros + tirosFinalizados) % NUM_TIROS;
 
 }
 
@@ -672,7 +642,7 @@ int main(int argc, char** argv) {
 
 	init();
 	initTexture();
-
+	cria_fila(fila);
 
 
 //glutDisplayFunc ( displayFundo );
