@@ -171,10 +171,7 @@ void initTexture(void) {
 	glPixelStorei( GL_UNPACK_ALIGNMENT, 1);
 
 	// Define quantas texturas serão usadas no programa 
-	glGenTextures(1, texture_id);  // 1 = uma textura;
-								   // texture_id = vetor que guardas os números das texturas
-
-	// Define os números da textura dos cubos
+	glGenTextures(1, texture_id);
 	texture_id[FUNDO] = 1000;
 	texture_id[METEORO1] = 1001;
 	texture_id[METEORO2] = 1002;
@@ -187,55 +184,43 @@ void initTexture(void) {
 	glBindTexture( GL_TEXTURE_2D, texture_id[TIRO]);
 	tgaLoad("tiro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
-	// ****
-	// Define a textura do objeto da ESQUERDA
-	// ****
+
 	glBindTexture( GL_TEXTURE_2D, texture_id[FUNDO]);
 	tgaLoad("cosmos2.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[Fim_Jogo]);
 	tgaLoad("fimJogo.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
-	// Define que tipo de textura será usada
-	// GL_TEXTURE_2D ==> define que será usada uma textura 2D (bitmaps)
-	// texture_id[OBJETO_ESQUERDA]  ==> define o número da textura 
+
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO1]);
-	// Carrega a primeira imagem .TGA 
+
 	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[Fogo]);
 	tgaLoad("fogo.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
-	// ****
-	// Define a textura do objeto da DIREITA
-	// ****
 
-	// Define que tipo de textura será usada
-	// GL_TEXTURE_2D ==> define que será usada uma textura 2D (bitmaps)
-	// texture_id[OBJETO_ESQUERDA]  ==> define o número da textura 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO2]);
 
-	// carrega a segunda imagem TGA
+
 	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO3]);
 
-	// carrega a segunda imagem TGA
+
 	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO3]);
 
-	// carrega a segunda imagem TGA
+
 	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO4]);
 
-	// carrega a segunda imagem TGA
 	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 	glBindTexture( GL_TEXTURE_2D, texture_id[METEORO1]);
 
-	// carrega a segunda imagem TGA 
 	tgaLoad("meteoro.tga", &temp_image, TGA_FREE | TGA_LOW_QUALITY);
 
 }
@@ -278,21 +263,16 @@ void init(void) {
 
 	carregar_texturas();
 	compoe_jato();
-	glShadeModel(GL_SMOOTH);							// Enable Smooth Shading
-	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
+	glShadeModel(GL_SMOOTH);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
 	glEnable( GL_COLOR_MATERIAL);
 	glColorMaterial( GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
 	glEnable( GL_CULL_FACE);
 }
-// **********************************************************************
-//  void reshape( int w, int h )
-//		trata o redimensionamento da janela OpenGL
-//
-// **********************************************************************
+
 void reshape(int w, int h) {
-	// Prevent a divide by zero, when window is too short
-	// (you cant make a window of zero width).
+
 	if (h == 0)
 		h = 1;
 
@@ -339,13 +319,8 @@ void displayFundo(void) {
 
 }
 
-// **********************************************************************
-//   void DesenhaCubo (GLuint nro_da_textura)
-//
-//
-// **********************************************************************
+
 void DesenhaCubo(GLuint nro_da_textura) {
-	// Desenha Cubo 1
 
 	// define qual das texturas usar
 	glBindTexture( GL_TEXTURE_2D, nro_da_textura);
@@ -511,6 +486,7 @@ void verificarcolisoes() {
 
 			meteoro = remove_fila(fila_meteoros);
 
+			//colisao tiro e meteoro
 			if (colisao(tiro.posicaoAtual, meteoro.posicaoAtual)) {
 
 				tiro.visivel = false;
@@ -543,31 +519,6 @@ void verificarcolisoes() {
 	}
 }
 
-/*
-bool verificarColisaoJato() {
-
-	tiroMeteoro meteoros[5];
-	tiroMeteoro meteoro;
-	int m = 0;
-
-	while (!fila_vazia(fila_meteoros)) {
-
-		meteoro = remove_fila(fila_meteoros);
-
-		if (meteoro.posicaoAtual.z > (-8.0)) {
-			cout<<meteoro.posicaoAtual.z<<endl;
-			texturaFundo = Fim_Jogo;
-
-		}
-
-		meteoros[m++] = meteoro;
-	}
-
-	for (int j = 0; j < m; j++) {
-		insere_fila(fila_meteoros, meteoros[j]);
-	}
-}
-*/
 
 void desenhaMeteoros() {
 
@@ -618,11 +569,6 @@ void desenhaMeteoros() {
 
 }
 
-// **********************************************************************
-//  void display( void )
-//
-//
-// **********************************************************************
 void display(void) {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -692,14 +638,7 @@ void Atirar(unsigned char tecla, int x, int y) {
 
 void special(int key, int x, int y) {
 	switch (key) {
-	/* case GLUT_KEY_UP:
-	 obs[1]=obs[1]+1;
-	 glutPostRedisplay();
-	 break;
-	 case GLUT_KEY_DOWN:
-	 obs[1] =obs[1]-1;
-	 glutPostRedisplay();
-	 break;*/
+
 	case GLUT_KEY_LEFT:
 		tetaxz = tetaxz - 5.0;
 		glutPostRedisplay();
@@ -713,50 +652,16 @@ void special(int key, int x, int y) {
 	}
 }
 
-// **********************************************************************
-//  void keyboard ( unsigned char key, int x, int y )
-//
-//
-// **********************************************************************
-void keyboard(unsigned char key, int x, int y) {
-	switch (key) {
-	case 27:        // When Escape Is Pressed...
-		exit(0);   // Exit The Program
-		break;        // Ready For Next Case
-	default:        // Now Wrap It Up
-		break;
-	}
-}
 
-// **********************************************************************
-//  void arrow_keys ( int a_keys, int x, int y )  
-//
-//
-// **********************************************************************
-void arrow_keys(int a_keys, int x, int y) {
-	switch (a_keys) {
-	case GLUT_KEY_UP:     // When Up Arrow Is Pressed...
-		glutFullScreen(); // Go Into Full Screen Mode
-		break;
-	case GLUT_KEY_DOWN:               // When Down Arrow Is Pressed...
-		glutInitWindowSize(800, 600);
-		break;
-	default:
-		break;
-	}
-}
 
-// **********************************************************************
-//  void main ( int argc, char** argv )
-//
-//
-// **********************************************************************
+
+
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode( GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(800, 600);
-	glutCreateWindow("Tópicos em Computação Gráfica - Teste com Texturas.");
+	glutCreateWindow("Computação Gráfica - Meteoros.");
 
 	init();
 	initTexture();
@@ -774,7 +679,7 @@ int main(int argc, char** argv) {
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutSpecialFunc(special);
-	glutKeyboardFunc(keyboard);
+	//glutKeyboardFunc(keyboard);
 	glutKeyboardFunc(Atirar);
 //glutSpecialFunc(arrow_keys);
 	glutIdleFunc(display);
